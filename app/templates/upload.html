@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Детекция птиц</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            max-width: 600px; 
+            margin: 0 auto; 
+            padding: 20px; 
+        }
+        form { 
+            display: flex; 
+            flex-direction: column; 
+            gap: 15px; 
+        }
+        input[type="file"] { 
+            padding: 10px; 
+            border: 1px solid #ddd; 
+        }
+        .button-group {
+            display: flex;
+            gap: 10px;
+        }
+        button { 
+            padding: 10px; 
+            background: #4CAF50; 
+            color: white; 
+            border: none; 
+            cursor: pointer; 
+            flex: 1;
+        }
+        button.history-btn {
+            background: #2196F3;
+        }
+        .loader { 
+            display: none; 
+            border: 5px solid #f3f3f3; 
+            border-top: 5px solid #3498db; 
+            border-radius: 50%; 
+            width: 30px; 
+            height: 30px; 
+            animation: spin 1s linear infinite; 
+            margin: 20px auto; 
+        }
+        @keyframes spin { 
+            0% { transform: rotate(0deg); } 
+            100% { transform: rotate(360deg); } 
+        }
+        .error {
+            color: red;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Детекция птиц на видео</h1>
+    <form id="uploadForm">
+        <input type="file" name="file" accept="video/*" required>
+        <div class="button-group">
+            <button type="submit">Обработать видео</button>
+            <button type="button" class="history-btn" onclick="window.location.href='/history'">История обработки</button>
+        </div>
+    </form>
+    <div id="loader" class="loader"></div>
+    <div id="error" class="error"></div>
+
+    <script>
+        document.getElementById('uploadForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const form = e.target;
+            const loader = document.getElementById('loader');
+            const errorDiv = document.getElementById('error');
+            
+            loader.style.display = 'block';
+            errorDiv.textContent = '';
+            
+            const formData = new FormData(form);
+            
+            try {
+                const response = await fetch('/upload/', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Ошибка сервера');
+                }
+                
+                const data = await response.json();
+                if (data.status === 'success') {
+                    window.location.href = `/results/${data.video_id}`;
+                } else {
+                    throw new Error(data.message || 'Неизвестная ошибка');
+                }
+            } catch (error) {
+                loader.style.display = 'none';
+                errorDiv.textContent = `Ошибка: ${error.message}`;
+            }
+        });
+    </script>
+</body>
+</html>

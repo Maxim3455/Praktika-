@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>История обработки видео</title>
+    <style>
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; font-family: Arial, sans-serif; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background-color: #f2f2f2; position: sticky; top: 0; }
+        .btn { 
+            padding: 8px 12px; color: white; border: none; border-radius: 4px;
+            cursor: pointer; text-decoration: none; margin-right: 5px;
+            font-size: 14px; display: inline-block; transition: all 0.3s;
+        }
+        .btn:hover { opacity: 0.8; }
+        .btn-pdf { background: #e74c3c; }
+        .btn-excel { background: #2ecc71; }
+        .btn-delete { background: #34495e; }
+        .btn-home { background: #3498db; }
+        .actions-cell { display: flex; gap: 5px; }
+        .loading { display: none; color: #7f8c8d; font-style: italic; }
+        .error-message { color: #e74c3c; margin-top: 5px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>История обработки видео</h1>
+            <a href="/" class="btn btn-home">На главную</a>
+        </div>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>Дата</th>
+                    <th>Файл</th>
+                    <th>Макс. птиц</th>
+                    <th>Кадров</th>
+                    <th>Действия</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for entry in history %}
+                <tr id="entry-{{ entry.id }}">
+                    <td>{{ entry.timestamp }}</td>
+                    <td>{{ entry.original_filename }}</td>
+                    <td>{{ entry.max_birds }}</td>
+                    <td>{{ entry.total_frames }}</td>
+                    <td class="actions-cell">
+                        <button onclick="downloadReport('pdf', '{{ entry.id }}')" 
+                                class="btn btn-pdf">PDF</button>
+                        <button onclick="downloadReport('excel', '{{ entry.id }}')" 
+                                class="btn btn-excel">Excel</button>
+                        <button onclick="deleteEntry('{{ entry.id }}')" 
+                                class="btn btn-delete">Удалить</button>
+                        <span id="loading-{{ entry.id }}" class="loading">Генерация...</span>
+                        <div id="error-{{ entry.id }}" class="error-message"></div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        async function downloadReport(type, entryId) {
+            const loadingEl = document.getElementById(`loading-${entryId}`);
+            const errorEl = document.getElementById(`error-${entryId}`);
+            
+            try {
+                // Show loading state
+                loadingEl.style.display = 'inline';
+                errorEl.textContent = '';
+                
+                const response = await fetch(`/report/${type}/${entryId}`);
+                
+                if (!response.ok) {
+                    // If report doesn't exist, try to regenerate
+                    if (response.status === 404) {
+                        const regenerate = confirm(`Отчет не найден. Сгенерировать заново?`);
+                        if (regenerate) {
+                            await regenerateReport(type, entryId);
+                            return;
+                        }
+                    }
+                    throw new Error(await response.text());
+                }
+                
+                // If successful, download the file
+                window.open(`/report/${type}/${entryId}`, '_blank');
+                
+            } catch (error) {
+                errorEl.textContent = `Ошибка: ${error.message}`;
+                console.error(`Error downloading ${type} report:`, error);
+            } finally {
+                loadingEl.style.display = 'none';
+            }
+        }
+        
+        async function regenerateReport(type, entryId) {
+            const loadingEl = document.getElementById(`loading-${entryId}`);
+            const errorEl = document.getElementById(`error-${entryId}`);
+            
+            try {
+                loadingEl.style.display = 'inline';
+                errorEl.textContent = '';
+                
+                const response = await fetch(`/reports/generate/${entryId}`, {
+                    method: 'POST'
+                });
+                
+                if (!response.ok) {
+                    throw new Error(await response.text());
+                }
+                
+                // After regeneration, try to download again
+                await downloadReport(type, entryId);
+                
+            } catch (error) {
+                errorEl.textContent = `Ошибка генерации: ${error.message}`;
+                console.error(`Error regenerating report:`, error);
+            } finally {
+                loadingEl.style.display = 'none';
+            }
+        }
+        
+        async function deleteEntry(entryId) {
+            if (!confirm('Вы уверены, что хотите удалить эту запись?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/history/delete/${entryId}`, {
+                    method: 'POST'
+                });
+
+                if (response.ok) {
+                    document.getElementById(`entry-${entryId}`).remove();
+                } else {
+                    const error = await response.json();
+                    alert(`Ошибка: ${error.detail || 'Неизвестная ошибка'}`);
+                }
+            } catch (error) {
+                alert(`Ошибка: ${error.message}`);
+            }
+        }
+    </script>
+</body>
+</html>
