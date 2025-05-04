@@ -70,14 +70,14 @@
             const errorEl = document.getElementById(`error-${entryId}`);
             
             try {
-                // Show loading state
+                
                 loadingEl.style.display = 'inline';
                 errorEl.textContent = '';
                 
                 const response = await fetch(`/report/${type}/${entryId}`);
                 
                 if (!response.ok) {
-                    // If report doesn't exist, try to regenerate
+                    
                     if (response.status === 404) {
                         const regenerate = confirm(`Отчет не найден. Сгенерировать заново?`);
                         if (regenerate) {
@@ -88,7 +88,7 @@
                     throw new Error(await response.text());
                 }
                 
-                // If successful, download the file
+                
                 window.open(`/report/${type}/${entryId}`, '_blank');
                 
             } catch (error) {
@@ -115,7 +115,7 @@
                     throw new Error(await response.text());
                 }
                 
-                // After regeneration, try to download again
+                
                 await downloadReport(type, entryId);
                 
             } catch (error) {

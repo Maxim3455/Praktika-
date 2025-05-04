@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 templates = Jinja2Templates(directory="app/templates")
 
 def save_history(data: dict) -> dict:
-    """Save processing history to JSON file"""
+    
     os.makedirs(HISTORY_DIR, exist_ok=True)
     entry_id = str(uuid.uuid4())
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -36,7 +36,7 @@ def save_history(data: dict) -> dict:
     return history_entry
 
 def load_history() -> list:
-    """Load all history entries"""
+   
     history = []
     if HISTORY_DIR.exists():
         for file in sorted(HISTORY_DIR.glob("*.json")):
@@ -50,7 +50,7 @@ def load_history() -> list:
 @router.post("/upload/")
 async def upload_video(file: UploadFile = File(...)):
     try:
-        # Ensure directories exist
+        
         os.makedirs(UPLOAD_DIR, exist_ok=True)
         os.makedirs(PROCESSED_DIR, exist_ok=True)
         os.makedirs(REPORTS_DIR, exist_ok=True)
@@ -59,17 +59,17 @@ async def upload_video(file: UploadFile = File(...)):
         original_filename = file.filename
         processed_filename = f"{video_id}.mp4"
         
-        # Save original video
+        
         video_path = UPLOAD_DIR / processed_filename
         async with aiofiles.open(video_path, "wb") as f:
             await f.write(await file.read())
         
-        # Process video
+        
         output_path = PROCESSED_DIR / processed_filename
         processor = VideoProcessor()
         result = processor.process_video(video_path, output_path)
         
-        # Save to history
+        
         history_entry = save_history({
             "original_filename": original_filename,
             "processed_filename": processed_filename,
@@ -78,7 +78,7 @@ async def upload_video(file: UploadFile = File(...)):
             "detections": result["detections"]
         })
         
-        # Generate reports
+        
         try:
             pdf_path = generate_pdf_report(history_entry)
             excel_path = generate_excel_report(history_entry)
@@ -95,11 +95,11 @@ async def upload_video(file: UploadFile = File(...)):
 
 @router.get("/report/pdf/{entry_id}")
 async def download_pdf_report(entry_id: str):
-    """Download PDF report endpoint"""
+    
     report_path = REPORTS_DIR / f"report_{entry_id}.pdf"
     
     if not report_path.exists():
-        # Try to regenerate if not exists
+        
         try:
             history = load_history()
             entry = next((e for e in history if e["id"] == entry_id), None)
@@ -121,7 +121,7 @@ async def download_pdf_report(entry_id: str):
 
 @router.get("/report/excel/{entry_id}")
 async def download_excel_report(entry_id: str):
-    """Download Excel report endpoint"""
+    
     report_path = REPORTS_DIR / f"report_{entry_id}.xlsx"
     
     if not report_path.exists():
@@ -170,7 +170,7 @@ async def delete_history_entry(entry_id: str):
     try:
         history_file = HISTORY_DIR / f"{entry_id}.json"
         
-        # Find and delete associated video file
+        
         history = load_history()
         entry = next((e for e in history if e["id"] == entry_id), None)
         video_file = None
@@ -178,11 +178,11 @@ async def delete_history_entry(entry_id: str):
         if entry:
             video_file = PROCESSED_DIR / entry["processed_filename"]
         
-        # Delete history entry
+        
         if history_file.exists():
             history_file.unlink()
         
-        # Delete video file
+        
         if video_file and video_file.exists():
             video_file.unlink()
         

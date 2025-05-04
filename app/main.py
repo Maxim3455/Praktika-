@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 app = FastAPI(title="Bird Detection System",
              description="API for detecting birds in videos")
 
-# Create required directories
+
 def init_dirs():
     dirs = [UPLOAD_DIR, PROCESSED_DIR, REPORTS_DIR, HISTORY_DIR]
     for dir_path in dirs:
@@ -24,17 +24,17 @@ def init_dirs():
             logger.error(f"Failed to create directory {dir_path}: {str(e)}")
             raise
 
-# Initialize directories
+
 init_dirs()
 
-# Include routes
+
 app.include_router(router)
 
-# Mount static files
+
 app.mount("/processed", StaticFiles(directory=PROCESSED_DIR), name="processed")
 app.mount("/reports", StaticFiles(directory=REPORTS_DIR), name="reports")
 
-# Templates configuration
+
 templates = Jinja2Templates(directory="app/templates")
 
 @app.on_event("startup")
