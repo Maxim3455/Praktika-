@@ -21,7 +21,7 @@ class VideoProcessor:
             height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
             total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
             
-            fourcc = cv2.VideoWriter_fourcc(*'avc1')  # вместо 'mp4v'
+            fourcc = cv2.VideoWriter_fourcc(*'avc1')  
             out = cv2.VideoWriter(str(output_path), fourcc, fps, (width, height))
             
             frame_count = 0

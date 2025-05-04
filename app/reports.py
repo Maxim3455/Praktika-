@@ -55,7 +55,7 @@ def generate_pdf_report(history_entry: dict) -> Path:
         
         
         pdf.set_fill_color(255, 255, 255)
-        for detection in history_entry['detections'][:100]:  # Limit to first 100 detections
+        for detection in history_entry['detections'][:100]:  
             pdf.cell(col_widths[0], 8, txt=str(detection['frame']), border=1)
             pdf.cell(col_widths[1], 8, txt=f"{detection['time']:.2f}", border=1)
             pdf.cell(col_widths[2], 8, txt=str(detection['birds']), border=1)
@@ -66,20 +66,20 @@ def generate_pdf_report(history_entry: dict) -> Path:
             pdf.ln(5)
             pdf.cell(200, 8, txt=f"... and {len(history_entry['detections']) - 100} more frames", ln=1)
         
-        # Save PDF
+        
         report_filename = f"report_{history_entry['id']}.pdf"
         report_path = REPORTS_DIR / report_filename
         pdf.output(report_path)
         
-        # Verify file was created
-        if not report_path.exists():
-            raise IOError("PDF file was not created successfully")
         
-        logger.info(f"Successfully generated PDF report: {report_path}")
+        if not report_path.exists():
+            raise IOError("PDF файл не может быть создан")
+        
+        logger.info(f"Успешно создан PDF: {report_path}")
         return report_path
         
     except Exception as e:
-        logger.error(f"Failed to generate PDF report: {str(e)}")
+        logger.error(f"Файл PDF не был создан: {str(e)}")
         raise
 
 def generate_excel_report(history_entry: dict) -> Path:
@@ -89,10 +89,10 @@ def generate_excel_report(history_entry: dict) -> Path:
         required_fields = ['id', 'detections']
         for field in required_fields:
             if field not in history_entry:
-                raise ValueError(f"Missing required field: {field}")
+                raise ValueError(f"Отсутствует обязательное поле: {field}")
         
         if not isinstance(history_entry['detections'], list):
-            raise ValueError("Detections should be a list")
+            raise ValueError("Обнаружения должны быть представлены в виде списка")
         
         
         os.makedirs(REPORTS_DIR, exist_ok=True)
@@ -112,11 +112,11 @@ def generate_excel_report(history_entry: dict) -> Path:
         
         
         if not report_path.exists():
-            raise IOError("Excel file was not created successfully")
+            raise IOError("Excel файл не может быть создан")
         
-        logger.info(f"Successfully generated Excel report: {report_path}")
+        logger.info(f"Успешно созданный Excel файл: {report_path}")
         return report_path
         
     except Exception as e:
-        logger.error(f"Failed to generate Excel report: {str(e)}")
+        logger.error(f"Ошибка создания Excel файла: {str(e)}")
         raise

@@ -39,4 +39,4 @@ templates = Jinja2Templates(directory="app/templates")
 
 @app.on_event("startup")
 async def startup_event():
-    logger.info("Application started successfully")
+    logger.info("Приложение успешно запущено")

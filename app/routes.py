@@ -44,7 +44,7 @@ def load_history() -> list:
                 with open(file, encoding='utf-8') as f:
                     history.append(json.load(f))
             except Exception as e:
-                logger.error(f"Error loading history file {file}: {str(e)}")
+                logger.error(f"Ошибка при загрузке файла истории {file}: {str(e)}")
     return sorted(history, key=lambda x: x["timestamp"], reverse=True)
 
 @router.post("/upload/")
@@ -82,15 +82,15 @@ async def upload_video(file: UploadFile = File(...)):
         try:
             pdf_path = generate_pdf_report(history_entry)
             excel_path = generate_excel_report(history_entry)
-            logger.info(f"Reports generated successfully: PDF={pdf_path}, Excel={excel_path}")
+            logger.info(f"Успешно сгенерированные отчеты: PDF={pdf_path}, Excel={excel_path}")
         except Exception as e:
-            logger.error(f"Report generation failed: {str(e)}")
-            raise HTTPException(500, detail=f"Report generation failed: {str(e)}")
+            logger.error(f"Не удалось сгенерировать отчет: {str(e)}")
+            raise HTTPException(500, detail=f"Не удалось сгенерировать отчет: {str(e)}")
         
         return {"status": "success", "video_id": video_id}
     
     except Exception as e:
-        logger.error(f"Upload error: {str(e)}", exc_info=True)
+        logger.error(f"Ошибка загрузки: {str(e)}", exc_info=True)
         raise HTTPException(500, detail=str(e))
 
 @router.get("/report/pdf/{entry_id}")
@@ -106,12 +106,12 @@ async def download_pdf_report(entry_id: str):
             
             if entry:
                 report_path = generate_pdf_report(entry)
-                logger.info(f"Regenerated PDF report: {report_path}")
+                logger.info(f"Восстановленный отчет в формате PDF: {report_path}")
             else:
-                raise HTTPException(404, detail="History entry not found")
+                raise HTTPException(404, detail="История не была найдена")
         except Exception as e:
             logger.error(f"Failed to regenerate PDF: {str(e)}")
-            raise HTTPException(404, detail="PDF report not found and regeneration failed")
+            raise HTTPException(404, detail="Отчет в формате PDF не найден, и восстановление завершилось неудачно")
     
     return FileResponse(
         report_path,
@@ -125,7 +125,7 @@ async def download_excel_report(entry_id: str):
     report_path = REPORTS_DIR / f"report_{entry_id}.xlsx"
     
     if not report_path.exists():
-        # Try to regenerate if not exists
+        
         try:
             history = load_history()
             entry = next((e for e in history if e["id"] == entry_id), None)
